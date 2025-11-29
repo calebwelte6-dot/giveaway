@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Giveaway Signup</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #111; color: #fff; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+    h1 { margin-bottom: 15px; text-align: center; }
+    .container { background: #1c1c1c; padding: 20px; border-radius: 12px; width: 100%; max-width: 450px; box-shadow: 0 0 10px rgba(255,255,255,0.1); }
+    input, button { width: 100%; padding: 12px; margin-top: 10px; border-radius: 8px; border: none; font-size: 16px; }
+    input { background: #222; color: #fff; }
+    button { background: #4caf50; color: #fff; cursor: pointer; font-weight: bold; }
+    button:disabled { background: #444; cursor: not-allowed; }
+    #participantList { margin-top: 15px; background: #00000040; padding: 10px; border-radius: 8px; max-height: 200px; overflow-y: auto; }
+    #timer { font-size: 22px; margin-top: 15px; text-align: center; }
+    #winner { margin-top: 20px; font-size: 24px; text-align: center; font-weight: bold; color: #4caf50; }
+    .admin-section { margin-top: 20px; padding: 10px; border: 1px solid #333; border-radius: 8px; display:none; }
+    #loginBox { margin-top:20px; }
+  </style>
+</head>
+<body>
+  <h1>Giveaway Signup</h1>
+
+  <div class="container">
+    <p>Enter your name to join the giveaway:</p>
+    <input type="text" id="nameInput" placeholder="Your name" />
+    <button onclick="joinGiveaway()">Join</button>
+
+    <div id="timer">Waiting for admin...</div>
+
+    <h3>Participants:</h3>
+    <div id="participantList"></div>
+
+    <div id="loginBox">
+      <h3>Admin Login</h3>
+      <input type="password" id="adminPass" placeholder="Enter admin password" />
+      <button onclick="adminLogin()">Login</button>
+    </div>
+
+    <div class="admin-section" id="adminPanel">
+      <h3>Admin Controls</h3>
+      <button onclick="startAutoGiveaway()">Start Auto Giveaway</button>
+      <button onclick="resetGiveaway()" style="background:#e53935">Reset Giveaway</button>
+      <button onclick="forceDraw()" style="background:#1976d2">Force Draw Winner</button>
+      <p><b>TikTok Chat Status:</b> Removed</p>
+    </div>
+
+    <div id="winner"></div>
+  </div>
+
+  <script>
+    let participants = [];
+    let timeLeft = 3600;
+    let timerInterval = null;
+    let timerRunning = false;
+    const ADMIN_PASSWORD = "1234";
+
+    function updateList() {
+      const list = document.getElementById('participantList');
+      list.innerHTML = participants.map(p => `<div>- ${p}</div>`).join('');
+    }
+
+    function joinGiveaway(nameFromChat) {
+      const name = nameFromChat || document.getElementById('nameInput').value.trim();
+      if (!name) return alert('Enter a name first');
+      if (participants.includes(name)) return;
+      participants.push(name);
+      updateList();
+      if (!nameFromChat) document.getElementById('nameInput').value = '';
+    }
+
+    function adminLogin() {
+      const pass = document.getElementById('adminPass').value;
+      if (pass === ADMIN_PASSWORD) {
+        document.getElementById('adminPanel').style.display = 'block';
+        document.getElementById('loginBox').style.display = 'none';
+        document.getElementById('timer').innerText = 'Admin Logged In — Ready to start auto giveaway';
+      } else {
+        alert('Wrong password');
+      }
+    }
+
+    function startAutoGiveaway() {
+      if (timerRunning) return;
+      timerRunning = true;
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        updateTimerDisplay();
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          drawWinner();
+        }
+      }, 1000);
+    }
+
+    function updateTimerDisplay() {
+      let h = Math.floor(timeLeft / 3600).toString().padStart(2, '0');
+      let m = Math.floor((timeLeft % 3600) / 60).toString().padStart(2, '0');
+      let s = (timeLeft % 60).toString().padStart(2, '0');
+      document.getElementById('timer').innerText = `Time left: ${h}:${m}:${s}`;
+    }
+
+    function drawWinner() {
+      if (participants.length === 0) {
+        document.getElementById('winner').innerText = 'No participants entered!';
+        return;
+      }
+      const winner = participants[Math.floor(Math.random() * participants.length)];
+      document.getElementById('winner').innerText = 'Winner: ' + winner;
+    }
+
+    function forceDraw() { drawWinner(); }
+
+    function resetGiveaway() {
+      participants = [];
+      updateList();
+      timeLeft = 3600;
+      timerRunning = false;
+      clearInterval(timerInterval);
+      document.getElementById('winner').innerText = '';
+      document.getElementById('timer').innerText = 'Waiting for admin...';
+    }
+
+    // TikTok chat removed
+  </script>
+</body>
+</html>
